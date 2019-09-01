@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.1" halcon_version="17.12">
+<procedure name="threshold_Otsu">
+<interface>
+<io>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="Region" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="LightDark" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="UsedThreshold" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>srcImage := Image</l>
+<l>get_image_size (srcImage, Width, Height)</l>
+<c>* 最大方差初始化为0</c>
+<l>MaxVariance := 0.0</l>
+<c></c>
+<c>* 亮区域的灰度均值</c>
+<l>Mean0 := []</l>
+<c>* 暗区域的灰度均值</c>
+<l>Mean1 := []</l>
+<c></c>
+<c>* 图像像素点总个数</c>
+<l>PixelSum := Width * Height</l>
+<l>tuple_real (PixelSum, PixelSum)</l>
+<c></c>
+<c>* 亮区域的像素点个数</c>
+<l>Area0 := []</l>
+<c>* 暗区域的像素点个数</c>
+<l>Area1 := []</l>
+<c></c>
+<c></c>
+<c>* 最佳分割灰度阈值从1遍历到255,初始阈值的选取可以取图像平均灰度值</c>
+<l>for ImgThreshold := 1 to 255 by 1</l>
+<l>    dev_display (srcImage)</l>
+<c>    * 区域分割</c>
+<l>    threshold (srcImage, Region, ImgThreshold, 255)</l>
+<c>    * 获得亮区域像素个数、均值和方差</c>
+<l>    area_center (Region, Area0, Row, Column)</l>
+<l>    intensity (Region, srcImage, Mean0, Deviation)</l>
+<c>    </c>
+<c>    * 获得暗区域像素个数、均值和方差</c>
+<l>    difference (srcImage, Region, RegionDifference)</l>
+<l>    area_center (RegionDifference, Area1, Row1, Column1)</l>
+<l>    intensity (RegionDifference, srcImage, Mean1, Deviation1)</l>
+<c></c>
+<c>    * 计算类间方差</c>
+<l>    Otsu := Area0/PixelSum * Area1/PixelSum * pow(Mean0-Mean1,2)</l>
+<c>    </c>
+<c>    * 获取最大类间方差最佳阈值</c>
+<l>    if (Otsu &gt; MaxVariance)</l>
+<l>        MaxVariance := Otsu</l>
+<l>        BestThreshold := ImgThreshold</l>
+<l>    endif </l>
+<l>endfor</l>
+<l>if (LightDark == 'Dark')</l>
+<l>    threshold (srcImage, Region, 0, BestThreshold)</l>
+<l>elseif(LightDark == 'Light')</l>
+<l>    threshold (srcImage, Region, BestThreshold, 255)</l>
+<l>endif</l>
+<l>UsedThreshold := BestThreshold</l>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="threshold_Otsu">
+<abstract lang="zh_CN">By Devin</abstract>
+<short lang="zh_CN">最大类间方差分割法</short>
+<parameters>
+<parameter id="Image">
+<description lang="zh_CN">输入图像</description>
+<multichannel>false</multichannel>
+<multivalue>false</multivalue>
+<sem_type>image</sem_type>
+<type_list>
+<item>byte</item>
+</type_list>
+</parameter>
+<parameter id="LightDark">
+<default_type>string</default_type>
+<default_value>'Light'</default_value>
+<description lang="zh_CN">提取亮区域还是暗区域？</description>
+<mixed_type>false</mixed_type>
+<multivalue>false</multivalue>
+<sem_type>string</sem_type>
+<type_list>
+<item>string</item>
+</type_list>
+<values>
+<item>'Dark'</item>
+<item>'Light'</item>
+</values>
+</parameter>
+<parameter id="Region">
+<description lang="zh_CN">输出区域</description>
+<multivalue>false</multivalue>
+<sem_type>region</sem_type>
+</parameter>
+<parameter id="UsedThreshold">
+<default_type>integer</default_type>
+<description lang="zh_CN">输出自动计算的阈值</description>
+<mixed_type>false</mixed_type>
+<multivalue>false</multivalue>
+<sem_type>integer</sem_type>
+<type_list>
+<item>integer</item>
+</type_list>
+</parameter>
+</parameters>
+</docu>
+</procedure>
+</hdevelop>
